@@ -1,0 +1,21 @@
+{
+  "name": "annotator",
+  "version": "1.2.9",
+  "main": "annotator.min.js",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "components"
+  ],
+  "homepage": "https://github.com/ikr/annotator-bower",
+  "_release": "1.2.9",
+  "_resolution": {
+    "type": "version",
+    "tag": "v1.2.9",
+    "commit": "492ddd5fadd93a6dcd5a0ad38369f99ed3b32008"
+  },
+  "_source": "git://github.com/ikr/annotator-bower.git",
+  "_target": "~1.2.9",
+  "_originalSource": "annotator",
+  "_direct": true
+}

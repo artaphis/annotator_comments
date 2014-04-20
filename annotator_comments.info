@@ -1,0 +1,6 @@
+name = Annotator Comments
+description = "Integrates the Annotator Javascript library with Comments"
+package = Other
+core = 7.x
+
+dependencies[] = jquery_update

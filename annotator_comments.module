@@ -1,0 +1,176 @@
+<?php
+
+/**
+ * @file
+ *
+ * Annotator Comments module.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function annotator_comments_menu() {
+  return array(
+    'ajax/annotator-comments/%node' => array(
+      'page callback' => 'annotator_comments_storage_root',
+      'page arguments' => array(2),
+      'access arguments' => array('access content'),
+      'file' => 'includes/annotator_comments.json.inc'
+    ),
+    'ajax/annotator-comments/%node/annotations' => array(
+      'page callback' => 'annotator_comments_storage_annotations',
+      'page arguments' => array(2),
+      'access arguments' => array('access content'),
+      'file' => 'includes/annotator_comments.json.inc'
+    ),
+    'ajax/annotator-comments/%node/annotations/%' => array(
+      'page callback' => 'annotator_comments_storage_annotation',
+      'page arguments' => array(2, 4),
+      'access arguments' => array('access content'),
+      'file' => 'includes/annotator_comments.json.inc'
+    ),
+  );
+}
+
+/**
+ * Implements hook_node_view().
+ */
+function  annotator_comments_node_view($node, $view_mode, $langcode) {
+  if ($view_mode == 'full') {
+    drupal_add_js(drupal_get_path('module', 'annotator_comments') . '/js/annotator/annotator-full.min.js');
+    drupal_add_js(array('annotatorComments' => array('nid' => $node->nid)), 'setting');
+    drupal_add_js(drupal_get_path('module', 'annotator_comments') . '/js/annotator-comments.js');
+
+    drupal_add_css(drupal_get_path('module', 'annotator_comments') . '/js/annotator/annotator.min.css');
+    drupal_add_css(drupal_get_path('module', 'annotator_comments') . '/css/annotator-comments.css');
+  }
+}
+
+/**
+ * Save the annotation to the database.
+ */
+function annotator_comments_save_annotation($annotation) {
+  $comment = annotator_comments_create_comment($annotation);
+
+  $annotation['id'] = $comment->cid;
+
+  annotator_comments_save_annotation_data($annotation);
+
+  return $comment;
+}
+
+/**
+ * Save annotation data.
+ */
+function annotator_comments_save_annotation_data($annotation, $op = 'new') {
+  $date = date_iso8601(REQUEST_TIME);
+  $annotation['created'] = isset($annotation['created']) ? $annotation['created'] : $date;
+  $annotation['updated'] = $date;
+
+  $annotation_record = array(
+    'cid' => $annotation['id'],
+    'annotation' => drupal_json_encode($annotation),
+  );
+
+  if ($op === 'new') {
+    drupal_write_record('annotator_comments', $annotation_record);
+  }
+  elseif ($op === 'update') {
+    drupal_write_record('annotator_comments', $annotation_record, array('cid'));
+  }
+}
+
+/**
+ * Create comment for annotation.
+ */
+function annotator_comments_create_comment($annotation) {
+  global $user;
+
+  $comment = new stdClass();
+
+  $comment->nid = $annotation['nid'];
+  $comment->cid = 0;
+  $comment->pid = 0;
+  $comment->uid = $user->uid;
+  $comment->mail = $user->mail;
+  $comment->name = $user->name;
+  $comment->thread = '01/';
+  $comment->hostname = ip_address();
+  $comment->created = REQUEST_TIME;
+  $comment->is_anonymous = 0;
+  $comment->homepage = '';
+  $comment->status = COMMENT_PUBLISHED;
+  $comment->language = LANGUAGE_NONE;
+  $comment->subject = truncate_utf8($annotation['text'], 127);
+
+  $comment->comment_body[$comment->language][0]['value'] = $annotation['text'];
+  $comment->comment_body[$comment->language][0]['format'] = 'filtered_html';
+
+  comment_submit($comment);
+  comment_save($comment);
+
+  return $comment;
+}
+
+/**
+ * Get annotations for the specified node.
+ */
+function annotator_comments_get_annotations($node) {
+  $query = db_select('comment', 'c');
+  $query->join('annotator_comments', 'ac', 'c.cid=ac.cid');
+  $query->fields('ac', array('annotation'));
+  $query->condition('c.nid', $node->nid);
+
+  $result = $query->execute()->fetchCol();
+
+  $annotations = array();
+
+  foreach ($result as $annotation_json) {
+    $annotation = drupal_json_decode($annotation_json);
+    $annotations[] = $annotation;
+  }
+
+  return $annotations;
+}
+
+/**
+ * Get single annotation.
+ */
+function annotator_comments_get_annotation($id) {
+  $query = db_select('annotator_comments', 'ac')
+    ->fields('ac')
+    ->condition('ac.cid', $id);
+  $result = $query->execute()->fetchAssoc();
+
+  $annotation = drupal_json_decode($result['annotation']);
+
+  return $annotation;
+}
+
+/**
+ * Update single annotation.
+ */
+function annotator_comments_update_annotation($annotation) {
+  annotator_comments_save_annotation_data($annotation, 'update');
+
+  return $annotation;
+}
+
+/**
+ * Get single annotation.
+ */
+function annotator_comments_delete_annotation($id) {
+  comment_delete($id);
+  db_delete('annotator_comments')
+    ->condition('cid', $id)
+    ->execute();
+}
+
+/**
+ * Implements hook_comment_delete().
+ */
+function annotator_comments_comment_delete($comment) {
+  db_delete('annotator_comments')
+    ->condition('cid', $comment->cid)
+    ->execute();
+}

@@ -1,0 +1,9 @@
+.annotated {
+  background: #fffdb2;
+  transition: all 1s ease;
+}
+
+.annotator-hl-linked {
+  background: #47C965;
+  transition: all 1s ease;
+}
