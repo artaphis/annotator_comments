@@ -35,7 +35,7 @@ function annotator_comments_menu() {
 /**
  * Implements hook_permission().
  */
-function hook_permission() {
+function annotator_comments_permission() {
   return array(
     'use annotator comments' => array(
       'title' => t('Use annotator comments'),
