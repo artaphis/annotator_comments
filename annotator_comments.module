@@ -51,9 +51,7 @@ function  annotator_comments_node_view($node, $view_mode, $langcode) {
  */
 function annotator_comments_save_annotation($annotation) {
   $comment = annotator_comments_create_comment($annotation);
-
   $annotation['id'] = $comment->cid;
-
   annotator_comments_save_annotation_data($annotation);
 
   return $comment;
