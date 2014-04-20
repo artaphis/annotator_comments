@@ -9,7 +9,7 @@
         annotatorComments.reloadPage = function () {
           setTimeout(function () {
             location.reload(true);
-          }, 2000);
+          }, 3000);
         };
 
         annotatorComments.pluginInit = function () {
@@ -19,7 +19,9 @@
           annotator
             .subscribe('annotationsLoaded',function (annotations) {
               for (var i = 0; i < annotations.length; i++) {
-                $('#comment-' + annotations[i].id + ' + .comment').addClass('annotated').data('annotation', annotations[i]);
+                if (annotations[i].highlights.length) {
+                  $('#comment-' + annotations[i].id + ' + .comment').addClass('annotated').data('annotation', annotations[i]);
+                }
               }
 
               $.each($('.comment.annotated'), function () {

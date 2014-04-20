@@ -14,20 +14,32 @@ function annotator_comments_menu() {
     'ajax/annotator-comments/%node' => array(
       'page callback' => 'annotator_comments_storage_root',
       'page arguments' => array(2),
-      'access arguments' => array('access content'),
+      'access arguments' => array('use annotator comments'),
       'file' => 'includes/annotator_comments.json.inc'
     ),
     'ajax/annotator-comments/%node/annotations' => array(
       'page callback' => 'annotator_comments_storage_annotations',
       'page arguments' => array(2),
-      'access arguments' => array('access content'),
+      'access arguments' => array('use annotator comments'),
       'file' => 'includes/annotator_comments.json.inc'
     ),
     'ajax/annotator-comments/%node/annotations/%' => array(
       'page callback' => 'annotator_comments_storage_annotation',
       'page arguments' => array(2, 4),
-      'access arguments' => array('access content'),
+      'access arguments' => array('use annotator comments'),
       'file' => 'includes/annotator_comments.json.inc'
+    ),
+  );
+}
+
+/**
+ * Implements hook_permission().
+ */
+function hook_permission() {
+  return array(
+    'use annotator comments' => array(
+      'title' => t('Use annotator comments'),
+      'description' => t('Perform users to create/edit/delete annotator comments.'),
     ),
   );
 }
@@ -36,7 +48,7 @@ function annotator_comments_menu() {
  * Implements hook_node_view().
  */
 function  annotator_comments_node_view($node, $view_mode, $langcode) {
-  if ($view_mode == 'full') {
+  if ($view_mode == 'full' && user_access('use annotator comments')) {
     drupal_add_js(drupal_get_path('module', 'annotator_comments') . '/js/annotator/annotator-full.min.js');
     drupal_add_js(array('annotatorComments' => array('nid' => $node->nid)), 'setting');
     drupal_add_js(drupal_get_path('module', 'annotator_comments') . '/js/annotator-comments.js');
